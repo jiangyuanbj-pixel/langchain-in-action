@@ -1,6 +1,7 @@
 '''欢迎来到LangChain实战课
 https://time.geekbang.org/column/intro/100617601
 作者 黄佳'''
+from langchain_openai import ChatOpenAI
 from dotenv import load_dotenv  # 用于加载环境变量
 load_dotenv()  # 加载 .env 文件中的环境变量
 
@@ -18,7 +19,21 @@ prompt_template = """您是一位专业的鲜花店文案撰写员。
 # 通过LangChain调用模型
 from langchain_openai import OpenAI
 # 创建模型实例
-model = OpenAI(model_name='gpt-3.5-turbo-instruct')
+api_key = os.getenv('OPENAI_API_KEY')
+base_url = os.getenv('OPENAI_API_BASE')
+#model = OpenAI(model_name='deepseek-chat')
+# model = OpenAI(
+#     base_url=base_url,
+#     api_key=api_key,
+#     model_name='deepseek-chat'
+# )
+
+model = ChatOpenAI(
+    base_url=base_url,
+    api_key=api_key,
+    model="deepseek-chat",
+    temperature=0.7  # LangChain 特点：统一的参数配置
+)
 
 # 导入结构化输出解析器和ResponseSchema
 from langchain.output_parsers import StructuredOutputParser, ResponseSchema
@@ -32,6 +47,8 @@ output_parser = StructuredOutputParser.from_response_schemas(response_schemas)
 
 # 获取格式指示
 format_instructions = output_parser.get_format_instructions()
+print(format_instructions)
+exit()
 # 根据模板创建提示，同时在提示中加入输出解析器的说明
 prompt = PromptTemplate.from_template(prompt_template, 
                 partial_variables={"format_instructions": format_instructions}) 
@@ -50,16 +67,18 @@ for flower, price in zip(flowers, prices):
 
     # 获取模型的输出
     output = model.invoke(input)
+    print( output)
+
     
-    # 解析模型的输出（这是一个字典结构）
-    parsed_output = output_parser.parse(output)
+    # # 解析模型的输出（这是一个字典结构）
+    # parsed_output = output_parser.parse(output)
 
-    # 在解析后的输出中添加“flower”和“price”
-    parsed_output['flower'] = flower
-    parsed_output['price'] = price
+    # # 在解析后的输出中添加“flower”和“price”
+    # parsed_output['flower'] = flower
+    # parsed_output['price'] = price
 
-    # 将解析后的输出添加到DataFrame中
-    df.loc[len(df)] = parsed_output  
+    # # 将解析后的输出添加到DataFrame中
+    # df.loc[len(df)] = parsed_output  
 
 # 打印字典
 print(df.to_dict(orient='records'))
